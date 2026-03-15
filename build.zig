@@ -43,12 +43,12 @@ pub fn build(b: *std.Build) void {
     // Test artifact
     const all_tests = b.addTest(.{
         .root_module = b.createModule(.{
-            .root_source_file = b.path("tests/all_tests.zig"),
+            .root_source_file = b.path("tests/coap_tests.zig"),
             .target = target,
             .optimize = optimize,
             .imports = &.{
                 .{ .name = "COTILLA", .module = cotilla_mod },
-                .{ .name = "sensors", .module = coap_mod },
+                .{ .name = "coap", .module = coap_mod },
             },
         }),
     });
