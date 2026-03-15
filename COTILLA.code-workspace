@@ -1,0 +1,13 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"[zig]": {
+			"editor.formatOnSave": true,
+			"editor.defaultFormatter": "ziglang.vscode-zig"
+		}
+	}
+}
