@@ -1,8 +1,8 @@
 const std = @import("std");
 const net = std.net;
-const log = std.log.scoped(.coap);
 const testing = std.testing;
 
+const log = std.log.scoped(.coap);
 /// Represents the content of a header in a CoAP message, which is 4 bytes long.
 /// To ensure the correct reading of the header, we use `extern struct` to prevent Zig from reordering the fields.
 /// This is because net procotols use big-endian byte order, and we want to ensure that the fields are read in the correct order without any padding or reordering by the compiler.
@@ -40,8 +40,12 @@ pub const CoapHeader = extern struct {
     }
 };
 
+/// Represents a handler function for incoming CoAP messages.
+/// A handler takes the message header, the uri paths, if available, and the payload, if available, and returns
+/// an error if something goes wrong during the handling of the message.
 pub const MessageHandler = *const fn (header: CoapHeader, uri_path: []const u8, payload: []const u8) anyerror!void;
 
+/// Represents the possible errors that can occur while parsing a CoAP message.
 pub const ParseError = error{
     InvalidTokenLength,
     TruncatedMessage,
@@ -50,11 +54,14 @@ pub const ParseError = error{
     UriPathTooLong,
 };
 
+/// Represents the result of parsing a CoAP message, which includes the URI path and the payload.
 pub const ParsedMessage = struct {
     uri_path: []const u8,
     payload: []const u8,
 };
 
+/// Allows to extract the CoAP options, used to extract the URI path and the payload from a CoAP message.
+/// Returns an error if the message is malformed or if the URI path is too long.
 fn readExtendedField(nibble: u4, packet: []const u8, cursor: *usize) ParseError!u16 {
     return switch (nibble) {
         13 => blk: {
@@ -74,6 +81,22 @@ fn readExtendedField(nibble: u4, packet: []const u8, cursor: *usize) ParseError!
     };
 }
 
+/// Parses the CoAP message options and payload from the given packet.
+///
+/// A CoAP message consists of a header (4 bytes), followed by an optional token (0-8 bytes), followed by options and an optional payload.
+/// [Header][Token][Options][Payload]
+///
+/// Some examples:
+/// 1.- Message without options or payload:
+///    [x40x02x12x34][xFF]
+/// 2.- Message without options but with payload:
+///    [x40x02x12x34][xFF][x48x65x6Cx6Cx6F] (payload = "Hello")
+/// 3.- Message with options and payload:
+///    [x40x02x12x34][xFF][xB6x73x65x6Ex73x6Fx72][xFF][x48x65x6Cx6Cx6F] (options = "sensor") (payload = "Hello")
+///    In this example, the option has delta=11 (Uri-Path) and length=6, so, this bytes [x73x65x6Ex73x6Fx72] represent the value of the option, which is "sensor".
+///    The options are encoded using a delta encoding, so, the first option has a delta of 11 (Uri-Path), and the second option has a
+/// delta of 0, because it's the same option (Uri-Path), so, the second option also represents a part of the URI path, which is "sensor".
+/// The payload is separated from the options by a payload marker (0xFF).
 fn parseOptionsAndPayload(
     packet: []const u8,
     header: CoapHeader,
@@ -115,7 +138,7 @@ fn parseOptionsAndPayload(
         const value = packet[cursor .. cursor + option_len];
         cursor += option_len;
 
-        // Uri-Path = opción número 11
+        // Only process Uri-Path options (option number 11) to build the URI path, ignore other options for now
         if (current_option_number == 11) {
             if (uri_len != 0) {
                 if (uri_len >= uri_buf.len) return error.UriPathTooLong;
