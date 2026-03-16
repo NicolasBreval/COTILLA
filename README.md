@@ -9,8 +9,6 @@ The objective of this project is to develop a program that implements an IoT gat
 * Forward the aggregated measurements to an external service, if it is a master node
 * Be user-configurable, allowing configurations to be distributed among the various nodes
 
-Translated with DeepL.com (free version)
-
 ## Build, test and run ⚙️
 Currently, COTILLA is a full-zig-based project, so no external dependencies are required, except for the zig compiler itself. To build the project the required command is:
 
