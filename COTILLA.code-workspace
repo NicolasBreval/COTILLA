@@ -7,7 +7,10 @@
 	"settings": {
 		"[zig]": {
 			"editor.formatOnSave": true,
-			"editor.defaultFormatter": "ziglang.vscode-zig"
+			"editor.defaultFormatter": "ziglang.vscode-zig",
+			"editor.codeActionsOnSave": {
+				"source.organizeImports": "always"
+			}
 		}
 	}
 }
